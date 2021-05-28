@@ -8,13 +8,18 @@ use Spatie\ShortSchedule\ShortSchedule;
 
 class ShortScheduleRunCommand extends Command
 {
-    protected $signature = 'short-schedule:run';
+    protected $signature = 'short-schedule:run {--pidfile=}';
 
     protected $description = 'Run the short scheduled commands';
 
     public function handle()
     {
         $loop = Factory::create();
+
+        $pid_file = $this->option('pidfile');
+        if(!empty($pid_file)){
+            file_put_contents($pid_file, posix_getpid());
+        }
 
         (new ShortSchedule($loop))->registerCommands()->run();
     }
