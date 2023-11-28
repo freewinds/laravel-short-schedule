@@ -79,17 +79,4 @@ class TestCase extends Orchestra
 
         return $this;
     }
-
-    protected function runShortScheduleFinishCommand(string $key): self
-    {
-        $loop = Factory::create();
-
-        $shortSchedule = (new ShortSchedule($loop))->registerCommands();
-
-        $shortSchedule->pendingCommands()->filter(function ($value) use ($key) {
-            return $value->getCacheName() == $key;
-        })->each->callAfterEndedBackgroundCommand(0);
-
-        return $this;
-    }
 }

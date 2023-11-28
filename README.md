@@ -2,7 +2,6 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-short-schedule.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-short-schedule)
 ![Tests](https://github.com/spatie/laravel-short-schedule/workflows/Tests/badge.svg)
-![Psalm](https://github.com/spatie/laravel-short-schedule/workflows/Psalm/badge.svg)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-short-schedule.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-short-schedule)
 
 [Laravel's native scheduler](https://laravel.com/docs/master/scheduling) allows you to schedule Artisan commands to run every minute. 
@@ -22,6 +21,9 @@ protected function shortSchedule(\Spatie\ShortSchedule\ShortSchedule $shortSched
     
     // this command will run every half a second
     $shortSchedule->command('another-artisan-command')->everySeconds(0.5);
+    
+    // this command will run every second and its signature will be retrieved from command automatically
+    $shortSchedule->command(\Spatie\ShortSchedule\Tests\Unit\TestCommand::class)->everySecond();
 }
 ```
 
@@ -59,6 +61,16 @@ php artisan short-schedule:run
 
 You should use a process monitor like [Supervisor](http://supervisord.org/index.html) to keep this task going at all times, and to automatically start it when your server boots. Whenever you change the schedule, you should restart this command.
 
+## Handle memory leaks
+
+To deal with commands that leak memory, you can set the lifetime in seconds of the short schedule worker:
+
+```bash
+php artisan short-schedule:run --lifetime=60 // after 1 minute the worker will be terminated
+```
+
+After the given amount of seconds, the worker and all it's child processes will be terminated, freeing all memory. Then supervisor (or similar watcher) will bring it back.
+
 ### Lumen
 
 Before you can run the `php artisan short-schedule:run` command in your Lumen project, you should make a copy of the `ShortScheduleRunCommand` into your `app/Commands` folder:
@@ -80,6 +92,9 @@ protected function shortSchedule(\Spatie\ShortSchedule\ShortSchedule $shortSched
 {
     // this artisan command will run every second
     $shortSchedule->command('artisan-command')->everySecond();
+    
+    // this artisan command will run every second, its signature will be resolved from container
+    $shortSchedule->command(\Spatie\ShortSchedule\Tests\Unit\TestCommand::class)->everySecond();
 }
 ```
 
@@ -108,7 +123,7 @@ $shortSchedule->command('artisan-command')->everySeconds(0.5);
  Use `exec` to schedule a bash command.
  
 ```php
-$shortSchedule->bash('bash-command')->everySecond();
+$shortSchedule->exec('bash-command')->everySecond();
 ```
  
  ### Preventing overlaps
@@ -185,27 +200,6 @@ Limit commands to only run on one server at a time.
 $shortSchedule->command('artisan-command')->everySecond()->onOneServer();
 ```
 
-### Write verbose to console
-
-The console will write which command was executed and when. It will also write why the command was skipped.
-
-```php
-$shortSchedule->command('artisan-command')->everySecond()->verbose();
-```
-```
-Execution #1 in 11/25/2020 2:03:33 PM output:
-Running command: echo 'called'
-
-Execution #2 in 11/25/2020 2:03:32 PM output:
-Skipping command (still is running): echo 'called'
-
-Execution #3 in 11/25/2020 2:05:32 PM output:
-Skipping command (system is down): echo 'called'
-
-Execution #4 in 11/25/2020 2:15:32 PM output:
-Skipping command (has already run on another server): echo 'called'
-```
-
 ## Events
 
 Executing any code when responding to these events is blocking. If your code takes a long time to execute, all short scheduled jobs will be delayed. We highly recommend to put any code you wish to execute in response to these events on a queue. 
@@ -236,11 +230,11 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover any security related issues, please email freek@spatie.be instead of using the issue tracker.
+If you've found a bug regarding security please mail [security@spatie.be](mailto:security@spatie.be) instead of using the issue tracker.
 
 ## Credits
 
